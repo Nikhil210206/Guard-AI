@@ -437,3 +437,15 @@
 [9b592c0c] 2025-12-18 00:47:19,994 - 🚨 Guard AI Monitoring Started!
 [9b592c0c] 2025-12-18 00:47:19,998 - Safari is open.
 [9b592c0c] 2025-12-18 00:47:20,092 - Open tabs in Safari: ['Validate Binary Search Tree | DSA Series : L.98 - YouTube', 'Problems - LeetCode', 'Day - 4 Leetcode Challenge - Queue - nb6938@srmist.edu.in - SRM Institute of Science and Technology Mail', 'Nikhil210206/Guard-AI: Guard AI is a real-time AI-based remote proctoring system that ensures secure', 'fair online assessments. It tracks website activity', 'detects speaking', 'and monitors user focus during exams', 'generating detailed session reports. Built with a modern frontend and a Node.js backend', 'Guard AI aims to redefine trust in online evaluations.', 'Figma prompt for Guard AI', 'Stitch - Projects', 'Guard AI | Remote Proctoring System', 'Start Page']
+[ef4530a4] 2025-12-18 00:54:30,924 - Session report cleared for new session
+[ef4530a4] 2025-12-18 00:54:30,924 - Starting Guard AI monitoring session
+[ef4530a4] 2025-12-18 00:54:30,924 - Face detection initialization failed: module 'mediapipe' has no attribute 'solutions'
+[ef4530a4] 2025-12-18 00:54:30,924 - 🚨 Guard AI Monitoring Started!
+[ef4530a4] 2025-12-18 00:54:30,928 - Safari is open.
+[ef4530a4] 2025-12-18 00:54:31,053 - Open tabs in Safari: ['Validate Binary Search Tree | DSA Series : L.98 - YouTube', 'Problems - LeetCode', 'Day - 4 Leetcode Challenge - Queue - nb6938@srmist.edu.in - SRM Institute of Science and Technology Mail', 'Nikhil210206/Guard-AI: Guard AI is a real-time AI-based remote proctoring system that ensures secure', 'fair online assessments. It tracks website activity', 'detects speaking', 'and monitors user focus during exams', 'generating detailed session reports. Built with a modern frontend and a Node.js backend', 'Guard AI aims to redefine trust in online evaluations.', 'Figma prompt for Guard AI', 'Stitch - Projects', 'Guard AI | Remote Proctoring System', 'Start Page']
+[b9009eb3] 2025-12-18 00:55:31,227 - Session report cleared for new session
+[b9009eb3] 2025-12-18 00:55:31,227 - Starting Guard AI monitoring session
+[b9009eb3] 2025-12-18 00:55:31,227 - Face detection initialization failed: module 'mediapipe' has no attribute 'solutions'
+[b9009eb3] 2025-12-18 00:55:31,227 - 🚨 Guard AI Monitoring Started!
+[b9009eb3] 2025-12-18 00:55:31,231 - Safari is open.
+[b9009eb3] 2025-12-18 00:55:31,327 - Open tabs in Safari: ['Validate Binary Search Tree | DSA Series : L.98 - YouTube', 'Problems - LeetCode', 'Day - 4 Leetcode Challenge - Queue - nb6938@srmist.edu.in - SRM Institute of Science and Technology Mail', 'Nikhil210206/Guard-AI: Guard AI is a real-time AI-based remote proctoring system that ensures secure', 'fair online assessments. It tracks website activity', 'detects speaking', 'and monitors user focus during exams', 'generating detailed session reports. Built with a modern frontend and a Node.js backend', 'Guard AI aims to redefine trust in online evaluations.', 'Figma prompt for Guard AI', 'Stitch - Projects', 'Guard AI | Remote Proctoring System', 'Start Page']
