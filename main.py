@@ -13,6 +13,10 @@ import logging
 from fpdf import FPDF
 import textwrap
 import uuid
+import signal
+import sys
+import random
+import config as cfg
 
 # Generate unique session ID
 SESSION_ID = str(uuid.uuid4())[:8]
@@ -29,23 +33,23 @@ logging.basicConfig(
 log_file_path = "website_usage_logs.txt"
 session_report_path = "logs/session_report.txt"
 
-# Lip Detection Constants
+# Lip Detection Constants (from config)
 UPPER_LIP = [13, 14]
 LOWER_LIP = [17, 18]
-LIP_MOVEMENT_THRESHOLD = 5.0  # Increased from 2.5 to reduce false positives
-SPEAKING_AUDIO_THRESHOLD = 0.05  # Increased from 0.01 to reduce false positives
-BACKGROUND_NOISE_THRESHOLD = 0.15  # Increased from 0.08
-AUDIO_DURATION = 0.3
-FS = 44100
-MINIMUM_SPEAKING_DURATION = 1.0  # Only log if speaking for at least 1 second
+LIP_MOVEMENT_THRESHOLD = cfg.LIP_MOVEMENT_THRESHOLD
+SPEAKING_AUDIO_THRESHOLD = cfg.SPEAKING_AUDIO_THRESHOLD
+BACKGROUND_NOISE_THRESHOLD = cfg.BACKGROUND_NOISE_THRESHOLD
+AUDIO_DURATION = cfg.AUDIO_DURATION
+FS = cfg.AUDIO_SAMPLE_RATE
+MINIMUM_SPEAKING_DURATION = cfg.MINIMUM_SPEAKING_DURATION
 
-# Gaze Tracking Constants
+# Gaze Tracking Constants (from config)
 LEFT_EYE = [362, 385, 387, 263, 373, 380]
 RIGHT_EYE = [33, 160, 158, 133, 153, 144]
 LEFT_IRIS = [474, 475, 476, 477]
 RIGHT_IRIS = [469, 470, 471, 472]
-LOOK_AWAY_DURATION = 5  # Seconds before warning
-MINIMUM_LOOK_AWAY_DURATION = 2.0  # Only log if looking away for at least 2 seconds
+LOOK_AWAY_DURATION = cfg.LOOK_AWAY_DURATION
+MINIMUM_LOOK_AWAY_DURATION = cfg.MINIMUM_LOOK_AWAY_DURATION
 
 # Global Variables
 audio_detected = False
@@ -53,13 +57,33 @@ background_noise_detected = False
 frame_queue = queue.Queue()
 multiple_persons_detected = False
 session_start_time = datetime.now()
+is_running = True
+
+def signal_handler(sig, frame):
+    global is_running
+    print(f"\n[Signal Handler] Received signal {sig}. Stopping Guard AI...")
+    logging.info(f"Received signal {sig}. Initiating graceful shutdown.")
+    is_running = False
+
+# Register signal handlers
+signal.signal(signal.SIGTERM, signal_handler)
+signal.signal(signal.SIGINT, signal_handler)
 
 # Clear session report at startup for fresh session
-if os.path.exists(session_report_path):
-    with open(session_report_path, 'w') as f:
-        f.write(f"# Guard AI Session Report - {SESSION_ID}\n")
-        f.write(f"# Session Started: {session_start_time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
-    logging.info("Session report cleared for new session")
+def clear_session_report():
+    if os.path.exists(session_report_path):
+        with open(session_report_path, 'w') as f:
+            f.write(f"# Guard AI Session Report - {SESSION_ID}\n")
+            f.write(f"# Session Started: {session_start_time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+        logging.info("Session report cleared for new session")
+    else:
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(session_report_path), exist_ok=True)
+        with open(session_report_path, 'w') as f:
+            f.write(f"# Guard AI Session Report - {SESSION_ID}\n")
+            f.write(f"# Session Started: {session_start_time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+
+clear_session_report()
 
 # Helper Functions
 def log_event(message):
@@ -302,16 +326,32 @@ def get_lip_distance(landmarks, upper_lip_idx, lower_lip_idx, frame_w, frame_h):
 
 def audio_listener():
     global audio_detected, background_noise_detected
-    while True:
+    print("[Audio Listener] Started")
+    logging.info("Audio listener thread started")
+    
+    try:
+        devices = sd.query_devices()
+        print(f"[Audio] Available devices: {len(devices)}")
+        default_input = sd.query_devices(kind='input')
+        if default_input:
+            print(f"[Audio] Default input device: {default_input['name']}")
+    except Exception as e:
+        print(f"⚠️ Warning: Could not query audio devices: {e}")
+        logging.warning(f"Audio device query failed: {e}")
+
+    while is_running:
         try:
+            # Record a small chunk of audio
             audio_data = sd.rec(int(AUDIO_DURATION * FS), samplerate=FS, channels=1, dtype='float64')
             sd.wait()
             volume_norm = np.linalg.norm(audio_data) * 10
             audio_detected = volume_norm > SPEAKING_AUDIO_THRESHOLD
             background_noise_detected = volume_norm > BACKGROUND_NOISE_THRESHOLD
         except Exception as e:
-            print("Audio Error:", e)
-            continue
+            if is_running:
+                print(f"❌ Audio Error: {e}")
+                logging.error(f"Audio error: {e}")
+            time.sleep(0.5)
 
 # Gaze Tracking
 def get_iris_position(landmarks, eye_landmarks, iris_landmarks, frame):
@@ -349,12 +389,40 @@ def run_combined_detection():
     print(f"[Combined Detection] Started - Session ID: {SESSION_ID}")
     logging.info(f"Starting Guard AI monitoring session")
     
+    iris_tracking_enabled = False
+    
     try:
-        face_mesh = mp.solutions.face_mesh.FaceMesh(refine_landmarks=True, max_num_faces=2)
+        # Try initializing with refine_landmarks=True for Iris Tracking
+        face_mesh = mp.solutions.face_mesh.FaceMesh(
+            static_image_mode=False,
+            max_num_faces=2,
+            refine_landmarks=True,
+            min_detection_confidence=0.5,
+            min_tracking_confidence=0.5
+        )
+        iris_tracking_enabled = True
+        print("✅ Face Mesh initialized successfully (Iris Tracking Enabled)")
+        logging.info("Face Mesh initialized with Iris Tracking")
     except Exception as e:
-        print(f"❌ Error initializing face detection: {e}")
-        logging.error(f"Face detection initialization failed: {e}")
-        return
+        print(f"⚠️ Warning: High-precision tracking failed: {e}")
+        logging.warning(f"Iris tracking initialization failed: {e}")
+        
+        try:
+            # Fallback to standard tracking (No Iris)
+            face_mesh = mp.solutions.face_mesh.FaceMesh(
+                static_image_mode=False,
+                max_num_faces=2,
+                refine_landmarks=False,
+                min_detection_confidence=0.5,
+                min_tracking_confidence=0.5
+            )
+            iris_tracking_enabled = False
+            print("✅ Face Mesh initialized in Standard Mode (No Iris Tracking)")
+            logging.info("Face Mesh initialized in Standard Mode")
+        except Exception as e2:
+            print(f"❌ Error initializing face detection: {e2}")
+            logging.error(f"Face detection initialization failed: {e2}")
+            return
     
     threading.Thread(target=audio_listener, daemon=True).start()
     
@@ -378,7 +446,7 @@ def run_combined_detection():
     speaking_start_timestamp = None  # Track actual start time for logging
     multiple_person_start = None
 
-    while cap.isOpened():
+    while cap.isOpened() and is_running:
         ret, frame = cap.read()
         if not ret:
             break
@@ -433,9 +501,16 @@ def run_combined_detection():
                         speaking_start_time = None
                         speaking_start_timestamp = None
 
-                left_eye_direction = get_iris_position(landmarks.landmark, LEFT_EYE, LEFT_IRIS, frame)
-                right_eye_direction = get_iris_position(landmarks.landmark, RIGHT_EYE, RIGHT_IRIS, frame)
-                direction = left_eye_direction if left_eye_direction == right_eye_direction else "Looking Away"
+                # Gaze Tracking (Only if Iris Tracking is enabled)
+                if iris_tracking_enabled:
+                    try:
+                        left_eye_direction = get_iris_position(landmarks.landmark, LEFT_EYE, LEFT_IRIS, frame)
+                        right_eye_direction = get_iris_position(landmarks.landmark, RIGHT_EYE, RIGHT_IRIS, frame)
+                        direction = left_eye_direction if left_eye_direction == right_eye_direction else "Looking Away"
+                    except Exception as e:
+                        direction = "Gaze Error"
+                else:
+                    direction = "Gaze Unavailable"
 
         if direction != "Looking Center":
             if look_away_start is None:
@@ -473,7 +548,7 @@ def run_website_monitor():
     print("[Website Monitor] Started")
     log_event("🚨 Guard AI Monitoring Started!")
 
-    while True:
+    while is_running:
         if is_safari_open():
             log_event("Safari is open.")
             open_tabs = get_safari_tabs()
@@ -484,21 +559,50 @@ def run_website_monitor():
             log_session_event("Website Activity", str(datetime.now().strftime("%H:%M:%S")), "Safari is not open.")
         time.sleep(5)
 
+# Demo Mode Event Generator
+def run_demo_mode():
+    if not cfg.DEMO_MODE:
+        return
+    print("[Demo Mode] Started")
+    while is_running:
+        time.sleep(random.randint(10, 20))
+        if not is_running: break
+        
+        event_type = random.choice(["Speaking", "Looking Away", "Multiple Persons"])
+        current_time = datetime.now().strftime("%H:%M:%S")
+        
+        if event_type == "Speaking":
+            end_time = (datetime.now() + timedelta(seconds=random.randint(2, 5))).strftime("%H:%M:%S")
+            log_session_event("Speaking", current_time, end_time)
+            logging.info(f"[DEMO] Generated Speaking event at {current_time}")
+        elif event_type == "Looking Away":
+            end_time = (datetime.now() + timedelta(seconds=random.randint(3, 7))).strftime("%H:%M:%S")
+            log_session_event("Looking Away", current_time, end_time)
+            logging.info(f"[DEMO] Generated Looking Away event at {current_time}")
+        elif event_type == "Multiple Persons":
+            log_session_event("Multiple Persons", current_time, "2 faces detected (Simulated)")
+            logging.info(f"[DEMO] Generated Multiple Persons event at {current_time}")
+
 # Main
 if __name__ == "__main__":
+    from datetime import timedelta
     combined_thread = threading.Thread(target=run_combined_detection, daemon=True)
     website_thread = threading.Thread(target=run_website_monitor, daemon=True)
+    demo_thread = threading.Thread(target=run_demo_mode, daemon=True)
 
     combined_thread.start()
     website_thread.start()
+    if cfg.DEMO_MODE:
+        demo_thread.start()
 
     print("All features are running. Press Ctrl+C to stop.")
     try:
-        while True:
+        while is_running:
             if not frame_queue.empty():
                 frame = frame_queue.get()
                 cv2.imshow("Guard-AI", frame)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
+                    is_running = False
                     break
             time.sleep(0.01)
     except KeyboardInterrupt:
