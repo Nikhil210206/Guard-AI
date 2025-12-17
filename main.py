@@ -345,11 +345,6 @@ def audio_listener():
             audio_data = sd.rec(int(AUDIO_DURATION * FS), samplerate=FS, channels=1, dtype='float64')
             sd.wait()
             volume_norm = np.linalg.norm(audio_data) * 10
-            
-            # Debug print to see what's happening
-            if volume_norm > 0.001:
-                print(f"\r[Audio Level]: {volume_norm:.4f} / {SPEAKING_AUDIO_THRESHOLD}", end="", flush=True)
-            
             audio_detected = volume_norm > SPEAKING_AUDIO_THRESHOLD
             background_noise_detected = volume_norm > BACKGROUND_NOISE_THRESHOLD
         except Exception as e:
