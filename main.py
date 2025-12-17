@@ -32,18 +32,20 @@ session_report_path = "logs/session_report.txt"
 # Lip Detection Constants
 UPPER_LIP = [13, 14]
 LOWER_LIP = [17, 18]
-LIP_MOVEMENT_THRESHOLD = 2.5
-SPEAKING_AUDIO_THRESHOLD = 0.01
-BACKGROUND_NOISE_THRESHOLD = 0.08
+LIP_MOVEMENT_THRESHOLD = 5.0  # Increased from 2.5 to reduce false positives
+SPEAKING_AUDIO_THRESHOLD = 0.05  # Increased from 0.01 to reduce false positives
+BACKGROUND_NOISE_THRESHOLD = 0.15  # Increased from 0.08
 AUDIO_DURATION = 0.3
 FS = 44100
+MINIMUM_SPEAKING_DURATION = 1.0  # Only log if speaking for at least 1 second
 
 # Gaze Tracking Constants
 LEFT_EYE = [362, 385, 387, 263, 373, 380]
 RIGHT_EYE = [33, 160, 158, 133, 153, 144]
 LEFT_IRIS = [474, 475, 476, 477]
 RIGHT_IRIS = [469, 470, 471, 472]
-LOOK_AWAY_DURATION = 5
+LOOK_AWAY_DURATION = 5  # Seconds before warning
+MINIMUM_LOOK_AWAY_DURATION = 2.0  # Only log if looking away for at least 2 seconds
 
 # Global Variables
 audio_detected = False
@@ -51,6 +53,13 @@ background_noise_detected = False
 frame_queue = queue.Queue()
 multiple_persons_detected = False
 session_start_time = datetime.now()
+
+# Clear session report at startup for fresh session
+if os.path.exists(session_report_path):
+    with open(session_report_path, 'w') as f:
+        f.write(f"# Guard AI Session Report - {SESSION_ID}\n")
+        f.write(f"# Session Started: {session_start_time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+    logging.info("Session report cleared for new session")
 
 # Helper Functions
 def log_event(message):
