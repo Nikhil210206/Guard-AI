@@ -92,23 +92,28 @@ def get_safari_tabs():
         return []
 
 def create_pdf_report(txt_path, pdf_path):
+    """Generate a professional PDF report from session data"""
     pdf = FPDF()
     pdf.add_page()
     
     # Title
-    pdf.set_font("Arial", 'B', size=16)
-    pdf.cell(0, 10, "Guard AI - Proctoring Report", ln=True, align='C')
-    pdf.ln(5)
+    pdf.set_font("Arial", 'B', size=20)
+    pdf.set_text_color(0, 51, 102)  # Dark blue
+    pdf.cell(0, 15, "Guard AI - Proctoring Report", ln=True, align='C')
+    pdf.ln(3)
     
-    # Session Info
-    pdf.set_font("Arial", size=10)
-    pdf.cell(0, 10, f"Session ID: {SESSION_ID}", ln=True)
-    pdf.cell(0, 10, f"Session Start: {session_start_time.strftime('%Y-%m-%d %H:%M:%S')}", ln=True)
-    pdf.cell(0, 10, f"Report Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", ln=True)
-    pdf.ln(10)
+    # Session Info Box
+    pdf.set_fill_color(240, 240, 240)  # Light gray background
+    pdf.set_font("Arial", 'B', size=10)
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(0, 8, "Session Information", ln=True, fill=True)
+    pdf.set_font("Arial", size=9)
+    pdf.cell(0, 6, f"Session ID: {SESSION_ID}", ln=True)
+    pdf.cell(0, 6, f"Session Start: {session_start_time.strftime('%Y-%m-%d %H:%M:%S')}", ln=True)
+    pdf.cell(0, 6, f"Report Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", ln=True)
+    pdf.ln(8)
 
-    pdf.set_font("Arial", size=12)
-
+    # Parse events from log file
     website_events = []
     speaking_events = []
     looking_events = []
@@ -121,65 +126,164 @@ def create_pdf_report(txt_path, pdf_path):
                 if not line:
                     continue
 
+                # Parse different log formats
                 if line.startswith("Website Activity"):
-                    website_events.append(line.replace("|", "-"))
+                    parts = line.split("|")
+                    if len(parts) >= 2:
+                        time_part = parts[1].strip()
+                        details = parts[2].strip() if len(parts) > 2 else "N/A"
+                        website_events.append({"time": time_part, "details": details})
+                        
                 elif line.startswith("Speaking"):
-                    speaking_events.append(line.replace("|", "-"))
+                    parts = line.split("|")
+                    if len(parts) >= 3:
+                        start = parts[1].strip()
+                        end = parts[2].strip()
+                        speaking_events.append({"start": start, "end": end})
+                        
                 elif line.startswith("Looking Away"):
-                    looking_events.append(line.replace("|", "-"))
+                    parts = line.split("|")
+                    if len(parts) >= 3:
+                        start = parts[1].strip()
+                        end = parts[2].strip()
+                        looking_events.append({"start": start, "end": end})
+                        
                 elif line.startswith("Multiple Persons"):
-                    multiple_person_events.append(line.replace("|", "-"))
+                    parts = line.split("|")
+                    if len(parts) >= 2:
+                        time_part = parts[1].strip()
+                        details = parts[2].strip() if len(parts) > 2 else "N/A"
+                        multiple_person_events.append({"time": time_part, "details": details})
 
-        # Section: Website Tracking
-        pdf.set_font("Arial", 'B', 14)
-        pdf.cell(0, 10, "Website Tracking", ln=True)
-        pdf.set_font("Arial", size=12)
-        if website_events:
-            for event in website_events:
-                wrapped = textwrap.wrap(event, width=90)
-                for w in wrapped:
-                    pdf.cell(0, 10, txt=w, ln=True)
-        else:
-            pdf.cell(0, 10, "No website activity detected.", ln=True)
-
-        # Section: Speaking
-        pdf.ln(5)
-        pdf.set_font("Arial", 'B', 14)
-        pdf.cell(0, 10, "Speaking Events", ln=True)
-        pdf.set_font("Arial", size=12)
-        if speaking_events:
-            for event in speaking_events:
-                pdf.cell(0, 10, txt=event, ln=True)
-        else:
-            pdf.cell(0, 10, "No speaking events recorded.", ln=True)
-
-        # Section: Looking Away
-        pdf.ln(5)
-        pdf.set_font("Arial", 'B', 14)
-        pdf.cell(0, 10, "Looking Away Events", ln=True)
-        pdf.set_font("Arial", size=12)
-        if looking_events:
-            for event in looking_events:
-                pdf.cell(0, 10, txt=event, ln=True)
-        else:
-            pdf.cell(0, 10, "No distractions recorded.", ln=True)
+        # Summary Statistics
+        pdf.set_font("Arial", 'B', size=14)
+        pdf.set_text_color(0, 51, 102)
+        pdf.cell(0, 10, "Summary Statistics", ln=True)
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_font("Arial", size=10)
         
-        # Section: Multiple Persons
-        pdf.ln(5)
+        pdf.cell(95, 7, f"Total Speaking Incidents: {len(speaking_events)}", border=1)
+        pdf.cell(95, 7, f"Total Looking Away Incidents: {len(looking_events)}", border=1, ln=True)
+        pdf.cell(95, 7, f"Total Website Checks: {len(website_events)}", border=1)
+        pdf.cell(95, 7, f"Multiple Person Detections: {len(multiple_person_events)}", border=1, ln=True)
+        pdf.ln(10)
+
+        # Section: Speaking Events
         pdf.set_font("Arial", 'B', 14)
-        pdf.cell(0, 10, "Multiple Person Detection", ln=True)
-        pdf.set_font("Arial", size=12)
-        if multiple_person_events:
-            for event in multiple_person_events:
-                pdf.cell(0, 10, txt=event, ln=True)
+        pdf.set_text_color(0, 51, 102)
+        pdf.cell(0, 10, "Speaking Events", ln=True)
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_font("Arial", size=9)
+        
+        if speaking_events:
+            # Show only first 50 events to avoid huge PDFs
+            display_events = speaking_events[:50]
+            pdf.set_font("Arial", 'B', size=9)
+            pdf.cell(20, 6, "No.", border=1, align='C')
+            pdf.cell(85, 6, "Start Time", border=1, align='C')
+            pdf.cell(85, 6, "End Time", border=1, align='C', ln=True)
+            pdf.set_font("Arial", size=8)
+            
+            for idx, event in enumerate(display_events, 1):
+                pdf.cell(20, 6, str(idx), border=1, align='C')
+                pdf.cell(85, 6, event['start'], border=1)
+                pdf.cell(85, 6, event['end'], border=1, ln=True)
+            
+            if len(speaking_events) > 50:
+                pdf.set_font("Arial", 'I', size=8)
+                pdf.cell(0, 6, f"... and {len(speaking_events) - 50} more events (showing first 50)", ln=True)
         else:
-            pdf.cell(0, 10, "No multiple person incidents detected.", ln=True)
+            pdf.cell(0, 7, "No speaking events detected.", ln=True)
+        
+        pdf.ln(8)
+
+        # Section: Looking Away Events
+        pdf.set_font("Arial", 'B', 14)
+        pdf.set_text_color(0, 51, 102)
+        pdf.cell(0, 10, "Looking Away Events", ln=True)
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_font("Arial", size=9)
+        
+        if looking_events:
+            display_events = looking_events[:50]
+            pdf.set_font("Arial", 'B', size=9)
+            pdf.cell(20, 6, "No.", border=1, align='C')
+            pdf.cell(85, 6, "Start Time", border=1, align='C')
+            pdf.cell(85, 6, "End Time", border=1, align='C', ln=True)
+            pdf.set_font("Arial", size=8)
+            
+            for idx, event in enumerate(display_events, 1):
+                pdf.cell(20, 6, str(idx), border=1, align='C')
+                pdf.cell(85, 6, event['start'], border=1)
+                pdf.cell(85, 6, event['end'], border=1, ln=True)
+            
+            if len(looking_events) > 50:
+                pdf.set_font("Arial", 'I', size=8)
+                pdf.cell(0, 6, f"... and {len(looking_events) - 50} more events (showing first 50)", ln=True)
+        else:
+            pdf.cell(0, 7, "No looking away events detected.", ln=True)
+        
+        pdf.ln(8)
+
+        # Section: Multiple Person Detection
+        pdf.set_font("Arial", 'B', 14)
+        pdf.set_text_color(0, 51, 102)
+        pdf.cell(0, 10, "Multiple Person Detection", ln=True)
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_font("Arial", size=9)
+        
+        if multiple_person_events:
+            pdf.set_font("Arial", 'B', size=9)
+            pdf.cell(20, 6, "No.", border=1, align='C')
+            pdf.cell(60, 6, "Time", border=1, align='C')
+            pdf.cell(110, 6, "Details", border=1, align='C', ln=True)
+            pdf.set_font("Arial", size=8)
+            
+            for idx, event in enumerate(multiple_person_events, 1):
+                pdf.cell(20, 6, str(idx), border=1, align='C')
+                pdf.cell(60, 6, event['time'], border=1)
+                pdf.cell(110, 6, event['details'][:50], border=1, ln=True)
+        else:
+            pdf.cell(0, 7, "No multiple person incidents detected.", ln=True)
+        
+        pdf.ln(8)
+
+        # Section: Website Activity (show last 20)
+        pdf.set_font("Arial", 'B', 14)
+        pdf.set_text_color(0, 51, 102)
+        pdf.cell(0, 10, "Website Activity (Last 20 Checks)", ln=True)
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_font("Arial", size=9)
+        
+        if website_events:
+            display_events = website_events[-20:]  # Show last 20
+            pdf.set_font("Arial", 'B', size=9)
+            pdf.cell(40, 6, "Time", border=1, align='C')
+            pdf.cell(150, 6, "Websites/Tabs", border=1, align='C', ln=True)
+            pdf.set_font("Arial", size=7)
+            
+            for event in display_events:
+                pdf.cell(40, 6, event['time'][:15], border=1)
+                # Truncate long tab names
+                tabs = event['details'][:80] + "..." if len(event['details']) > 80 else event['details']
+                pdf.cell(150, 6, tabs, border=1, ln=True)
+        else:
+            pdf.cell(0, 7, "No website activity recorded.", ln=True)
+
+        # Footer
+        pdf.ln(10)
+        pdf.set_font("Arial", 'I', size=8)
+        pdf.set_text_color(128, 128, 128)
+        pdf.cell(0, 5, "This report was automatically generated by Guard AI Proctoring System", ln=True, align='C')
+        pdf.cell(0, 5, f"For questions or concerns, please contact your exam administrator", ln=True, align='C')
 
         pdf.output(pdf_path)
         print(f"✅ Final report saved to {pdf_path}")
+        logging.info(f"PDF report generated successfully: {pdf_path}")
 
     except Exception as e:
         print(f"❌ PDF creation error: {e}")
+        logging.error(f"PDF generation failed: {e}")
 
 # Lip Detection
 def get_lip_distance(landmarks, upper_lip_idx, lower_lip_idx, frame_w, frame_h):
