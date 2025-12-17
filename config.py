@@ -6,7 +6,7 @@ LIP_MOVEMENT_THRESHOLD = 5.0  # Increased to reduce false positives
 SPEAKING_AUDIO_THRESHOLD = 0.02  # Lowered for better sensitivity (was 0.03)
 BACKGROUND_NOISE_THRESHOLD = 0.15  # Increased
 AUDIO_DURATION = 0.3  # Duration of audio samples (seconds)
-AUDIO_SAMPLE_RATE = 44100  # Audio sampling rate (Hz)
+AUDIO_SAMPLE_RATE = 48000  # Changed to 48000Hz (Native for Mac) to fix PortAudio errors
 MINIMUM_SPEAKING_DURATION = 0.5  # Reduced to 0.5s to capture short phrases
 
 # Gaze Tracking Settings
