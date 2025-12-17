@@ -480,8 +480,13 @@ def run_combined_detection():
         if result.multi_face_landmarks:
             for landmarks in result.multi_face_landmarks:
                 distance = get_lip_distance(landmarks.landmark, UPPER_LIP, LOWER_LIP, w, h)
-                lip_moving = abs(distance - previous_distance) > LIP_MOVEMENT_THRESHOLD
+                lip_diff = abs(distance - previous_distance)
+                lip_moving = lip_diff > LIP_MOVEMENT_THRESHOLD
                 previous_distance = distance
+                
+                # Debug: Print status if any activity is detected
+                if audio_detected or lip_moving:
+                    print(f"\r[DEBUG] Audio: {audio_detected} | Lip Move: {lip_moving} (Diff: {lip_diff:.2f})", end="", flush=True)
                 current_time = datetime.now().strftime("%H:%M:%S")
 
                 if lip_moving and audio_detected:
@@ -584,8 +589,12 @@ def run_demo_mode():
             logging.info(f"[DEMO] Generated Multiple Persons event at {current_time}")
 
 # Main
-if __name__ == "__main__":
-    from datetime import timedelta
+from datetime import timedelta
+
+def start_detection_process():
+    global is_running
+    is_running = True
+    
     combined_thread = threading.Thread(target=run_combined_detection, daemon=True)
     website_thread = threading.Thread(target=run_website_monitor, daemon=True)
     demo_thread = threading.Thread(target=run_demo_mode, daemon=True)
@@ -614,3 +623,6 @@ if __name__ == "__main__":
         create_pdf_report(session_report_path, session_pdf_path)
         print(f"Report saved as: {session_pdf_path}")
         cv2.destroyAllWindows()
+
+if __name__ == "__main__":
+    start_detection_process()

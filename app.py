@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request, jsonify, send_file, Response
-import subprocess
+import multiprocessing
 import os
 import signal
 import time
+import main  # Import the main module
 
 app = Flask(__name__, static_folder="Frontend", template_folder="Frontend", static_url_path="")
 process = None  
@@ -19,10 +20,10 @@ def features():
 def start_guard_ai():
     global process
     try:
-        if process is None:
-            # Use the python from the venv explicitly
-            venv_python = os.path.join(os.getcwd(), "venv", "bin", "python")
-            process = subprocess.Popen([venv_python, "main.py"], cwd=os.getcwd())
+        if process is None or not process.is_alive():
+            # Start the detection process using multiprocessing
+            process = multiprocessing.Process(target=main.start_detection_process)
+            process.start()
             return jsonify({"status": "success", "message": "Guard AI started successfully!"})
         else:
             return jsonify({"status": "error", "message": "Guard AI is already running!"})
@@ -33,14 +34,11 @@ def start_guard_ai():
 def stop_guard_ai():
     global process
     try:
-        if process is not None:
-            # Send SIGTERM to allow graceful shutdown and report generation
+        if process is not None and process.is_alive():
+            # Terminate the process
             process.terminate()
-            try:
-                # Wait up to 5 seconds for the process to finish report generation
-                process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                # If it doesn't stop, force kill it
+            process.join(timeout=5)
+            if process.is_alive():
                 process.kill()
             
             process = None
@@ -79,4 +77,5 @@ def stream_logs():
     return Response(generate_logs(), mimetype="text/event-stream")
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    multiprocessing.freeze_support()  # Required for PyInstaller
+    app.run(debug=False, port=5000)  # Debug=False for production/packaged app

@@ -2,7 +2,7 @@
 # Customize detection thresholds and monitoring parameters
 
 # Lip Detection Settings
-LIP_MOVEMENT_THRESHOLD = 5.0  # Increased to reduce false positives
+LIP_MOVEMENT_THRESHOLD = 2.0  # Lowered to 2.0 for better sensitivity (was 5.0)
 SPEAKING_AUDIO_THRESHOLD = 0.02  # Lowered for better sensitivity (was 0.03)
 BACKGROUND_NOISE_THRESHOLD = 0.15  # Increased
 AUDIO_DURATION = 0.3  # Duration of audio samples (seconds)
