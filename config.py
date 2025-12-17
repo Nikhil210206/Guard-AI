@@ -3,11 +3,11 @@
 
 # Lip Detection Settings
 LIP_MOVEMENT_THRESHOLD = 5.0  # Increased to reduce false positives
-SPEAKING_AUDIO_THRESHOLD = 0.03  # Adjusted for better sensitivity (was 0.05)
+SPEAKING_AUDIO_THRESHOLD = 0.02  # Lowered for better sensitivity (was 0.03)
 BACKGROUND_NOISE_THRESHOLD = 0.15  # Increased
 AUDIO_DURATION = 0.3  # Duration of audio samples (seconds)
 AUDIO_SAMPLE_RATE = 44100  # Audio sampling rate (Hz)
-MINIMUM_SPEAKING_DURATION = 1.0  # Seconds before logging
+MINIMUM_SPEAKING_DURATION = 0.5  # Reduced to 0.5s to capture short phrases
 
 # Gaze Tracking Settings
 LOOK_AWAY_DURATION = 5  # Seconds before warning for looking away
