@@ -1,116 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Guard AI | Features</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guard AI | Capabilities</title>
   <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Rajdhani:wght@400;700&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Rajdhani:wght@400;600;700&display=swap"
+    rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.10.2/lottie.min.js"></script>
 </head>
+
 <body>
-  <div id="page-transition">
-    <div class="background-grid full-page-grid"></div>
+  <nav>
+    <div class="logo"
+      style="font-family: 'Orbitron'; font-weight: bold; font-size: 1.5rem; color: var(--primary-color);">GUARD AI</div>
+    <ul>
+      <li><a href="index.html">DASHBOARD</a></li>
+      <li><a href="feature.html" style="color: var(--primary-color);">FEATURES</a></li>
+    </ul>
+  </nav>
 
-    <nav>
-      <ul>
-        <li><a href="index.html">Home</a></li>
-        <li><a href="feature.html">Features</a></li>
-      </ul>
-    </nav>
-
-    <header>
-      <h1>Key Features In Guard AI</h1>
-      <p>Your AI-powered solution for secure and fair online exams</p>
-    </header>
-
-    <section id="features">
-      <div class="feature" data-aos="fade-up" onmouseenter="playAnimation(0)" onmouseleave="stopAnimation(0)">
-        <div class="lottie-icon" id="lottie-0"></div>
-        <h3>Eyeball and Lips Movement Detection</h3>
-        <p>Tracks eye and lip movements to prevent external communication and distractions.</p>
-        <span class="status-badge">🟢 Active</span>
-      </div>
-
-      <div class="feature" data-aos="fade-up" data-aos-delay="100" onmouseenter="playAnimation(1)" onmouseleave="stopAnimation(1)">
-        <div class="lottie-icon" id="lottie-1"></div>
-        <h3>Screen and Audio Monitoring</h3>
-        <p>Monitors screen activity and audio for unauthorized websites or speech.</p>
-        <span class="status-badge">🟡 Monitoring</span>
-      </div>
-
-      <div class="feature" data-aos="fade-up" data-aos-delay="200" onmouseenter="playAnimation(2)" onmouseleave="stopAnimation(2)">
-        <div class="lottie-icon" id="lottie-2"></div>
-        <h3>Device and Port Checks</h3>
-        <p>Detects and monitors usage of unauthorized devices and USBs during exams.</p>
-        <span class="status-badge">🟢 Secured</span>
-      </div>
-
-      <div class="feature" data-aos="fade-up" data-aos-delay="300" onmouseenter="playAnimation(3)" onmouseleave="stopAnimation(3)">
-        <div class="lottie-icon" id="lottie-3"></div>
-        <h3>Comprehensive Reports</h3>
-        <p>Generates session summaries with timestamps and anomalies.</p>
-        <span class="status-badge">📊 Logging</span>
-      </div>
-    </section>
-
-    <footer>
-      <p>©️ 2025 Guard AI | Made with ❤️ by Team XCoders</p>
-    </footer>
+  <div class="features-header" data-aos="fade-down">
+    <h1>SYSTEM CAPABILITIES</h1>
+    <p>Advanced AI Modules for Secure Environments</p>
   </div>
 
-  <script>
-    const animationPaths = [
-      'lottie-0.json',
-      'lottie-1.json',
-      'lottie-2.json',
-      'lottie-3.json'
-    ];
+  <div class="features-grid">
+    <!-- Feature 1 -->
+    <div class="glass-card feature-card" data-aos="fade-up">
+      <div class="feature-icon">👁️</div>
+      <h3>BIOMETRIC TRACKING</h3>
+      <p>Precision tracking of head pose, eye gaze, and lip movement to detect unauthorized communication.</p>
+      <span class="status-badge status-active">ACTIVE</span>
+    </div>
 
-    const lottiePlayers = [];
+    <!-- Feature 2 -->
+    <div class="glass-card feature-card" data-aos="fade-up" data-aos-delay="100">
+      <div class="feature-icon">🖥️</div>
+      <h3>SCREEN MONITORING</h3>
+      <p>Real-time analysis of screen activity to detect unauthorized applications and browser tabs.</p>
+      <span class="status-badge status-monitoring">MONITORING</span>
+    </div>
 
-    animationPaths.forEach((path, index) => {
-      const container = document.getElementById(⁠ lottie-${index} ⁠);
-      const animation = lottie.loadAnimation({
-        container: container,
-        renderer: 'svg',
-        loop: false,
-        autoplay: false,
-        path: path
-      });
-      lottiePlayers.push(animation);
-    });
+    <!-- Feature 3 -->
+    <div class="glass-card feature-card" data-aos="fade-up" data-aos-delay="200">
+      <div class="feature-icon">🔌</div>
+      <h3>HARDWARE SECURITY</h3>
+      <p>Detection of unauthorized peripherals, USB devices, and secondary monitors.</p>
+      <span class="status-badge status-secured">SECURED</span>
+    </div>
 
-    function playAnimation(index) {
-      lottiePlayers[index].goToAndPlay(0, true);
-    }
+    <!-- Feature 4 -->
+    <div class="glass-card feature-card" data-aos="fade-up" data-aos-delay="300">
+      <div class="feature-icon">📊</div>
+      <h3>INTELLIGENT LOGGING</h3>
+      <p>Automated generation of forensic-grade session reports with timestamped evidence.</p>
+      <span class="status-badge status-logging">LOGGING</span>
+    </div>
+  </div>
 
-    function stopAnimation(index) {
-      lottiePlayers[index].stop();
-    }
-  </script>
-
+  <footer>
+    <p>SECURE PROCTORING SYSTEM v1.0 | GUARD AI</p>
+  </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
   <script>
-    AOS.init();
-
-    const page = document.getElementById('page-transition');
-    window.addEventListener('DOMContentLoaded', () => {
-      page.classList.add('loaded');
-    });
-
-    document.querySelectorAll('a').forEach(link => {
-      if (link.getAttribute('target') === '_blank' || link.href.startsWith('#')) return;
-      link.addEventListener('click', function(e) {
-        e.preventDefault();
-        const href = this.getAttribute('href');
-        page.classList.remove('loaded');
-        setTimeout(() => window.location.href = href, 500);
-      });
+    AOS.init({
+      duration: 800,
+      once: true
     });
   </script>
 </body>
+
 </html>
