@@ -1,123 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Guard AI | Remote Proctoring System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guard AI | Control Center</title>
   <link rel="stylesheet" href="style.css">
-
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Rajdhani:wght@400;700&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Rajdhani:wght@400;600;700&display=swap"
+    rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" />
 </head>
+
 <body>
-  <div id="page-transition">
-    <section class="hero-section">
-      <div class="hero-content">
-        <h1>Guard AI</h1>
-        <p>Your AI-Powered Remote Proctoring Solution</p>
-        <div class="button-container">
-          <button id="start-guard-ai" class="start-button">Start Guard AI</button>
-          <button id="stop-guard-ai" class="stop-button">Stop Guard AI</button>
-          <button id="download-report" class="download-button" disabled>Download Report</button>
-        </div>
+  <nav>
+    <div class="logo">GUARD AI</div>
+    <ul>
+      <li><a href="index.html">DASHBOARD</a></li>
+      <li><a href="feature.html">FEATURES</a></li>
+    </ul>
+  </nav>
+
+  <div class="dashboard-container">
+    <header class="hero-header" data-aos="fade-down">
+      <h1>SYSTEM CONTROL</h1>
+      <p>AI-Powered Remote Proctoring & Surveillance</p>
+
+      <div class="status-indicator">
+        <div class="status-dot"></div>
+        <span id="system-status">SYSTEM READY</span>
       </div>
-    </section>
-    <nav>
-      <ul>
-        <li><a href="index.html">Home</a></li>
-        <li><a href="feature.html">Features</a></li>
-      </ul>
-    </nav>
-    <section class="info-section">
-      <div class="info-card" data-aos="fade-up" data-aos-duration="1000">
-        <h2>🚨 Problem with Unmonitored Exams</h2>
-        <p>
-          With the explosion of remote education, many institutions rely on online exams. But most of these are held without any real-time proctoring, leading to:
-          <ul>
-            <li>Rampant cheating through multiple devices and collaboration</li>
-            <li>Lack of fairness, undermining the credibility of scores</li>
-            <li>No way to detect impersonation or suspicious behavior</li>
-            <li>Loss of trust in online certifications by employers and universities</li>
-          </ul>
-        </p>
+    </header>
+
+    <div class="glass-card control-panel" data-aos="zoom-in">
+      <button id="start-guard-ai" class="start-button">INITIALIZE GUARD</button>
+      <button id="stop-guard-ai" class="stop-button">TERMINATE SESSION</button>
+      <button id="download-report" class="download-button" disabled>EXPORT LOGS</button>
+    </div>
+
+    <div class="info-grid">
+      <div class="glass-card info-card" data-aos="fade-up" data-aos-delay="100">
+        <h2>🚨 THREAT DETECTION</h2>
+        <p>Real-time monitoring of unauthorized behavior:</p>
+        <ul>
+          <li>Multiple faces detected</li>
+          <li>Suspicious gaze aversion</li>
+          <li>Unauthorized speech</li>
+        </ul>
       </div>
 
-      <div class="info-card" data-aos="fade-up" data-aos-delay="150" data-aos-duration="1000">
-        <h2>🤖 How Guard AI Works</h2>
-        <p>
-          Guard AI is an advanced, multi-layered proctoring system that uses artificial intelligence to:
-          <ul>
-            <li>Detect head, eye, and lip movements to prevent external communication</li>
-            <li>Monitor screen activity for suspicious app usage</li>
-            <li>Analyze real-time audio for unauthorized voices or noise</li>
-            <li>Check device ports (like USBs) to catch unauthorized hardware</li>
-            <li>Generate timestamped reports with flagged anomalies</li>
-          </ul>
-        </p>
+      <div class="glass-card info-card" data-aos="fade-up" data-aos-delay="200">
+        <h2>🛡️ SYSTEM SECURITY</h2>
+        <p>Comprehensive environment scanning:</p>
+        <ul>
+          <li>Browser tab monitoring</li>
+          <li>Background audio analysis</li>
+          <li>Device integrity checks</li>
+        </ul>
       </div>
 
-      <div class="info-card" data-aos="fade-up" data-aos-delay="300" data-aos-duration="1000">
-        <h2>🌍 Real-World Impacts</h2>
-        <p>
-          Guard AI doesn't just detect cheating—it transforms how remote exams are conducted:
-          <ul>
-            <li>Restores trust in online exams and remote education systems</li>
-            <li>Ensures fair assessments even in low-resource environments</li>
-            <li>Scales easily from classrooms to corporates to government exams</li>
-            <li>Supports global accessibility without expensive infrastructure</li>
-            <li>Enables secure certifications for universities, employers, and institutions</li>
-          </ul>
-        </p>
+      <div class="glass-card info-card" data-aos="fade-up" data-aos-delay="300">
+        <h2>📊 INTELLIGENCE LOGS</h2>
+        <p>Detailed session reporting:</p>
+        <ul>
+          <li>Timestamped incident logs</li>
+          <li>Visual evidence capture</li>
+          <li>PDF summary generation</li>
+        </ul>
       </div>
-    </section>
-
-  
-    <footer>
-      <p>©️ 2025 Guard AI | Made with ❤️ by Team XCoders</p>
-    </footer>
+    </div>
   </div>
+
+  <footer>
+    <p>SECURE PROCTORING SYSTEM v1.0 | GUARD AI</p>
+  </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
   <script>
-    AOS.init();
-  </script>
-  <script>
+    AOS.init({
+      duration: 800,
+      once: true
+    });
+
+    const statusText = document.getElementById("system-status");
     const downloadButton = document.getElementById("download-report");
 
     document.getElementById("start-guard-ai").addEventListener("click", () => {
-      fetch("/start-guard-ai", {
-        method: "POST",
-      })
-        .then((response) => response.json())
-        .then((data) => {
+      statusText.textContent = "INITIALIZING...";
+      fetch("/start-guard-ai", { method: "POST" })
+        .then(r => r.json())
+        .then(data => {
           if (data.status === "success") {
-            alert("Guard AI started successfully!");
+            statusText.textContent = "MONITORING ACTIVE";
+            statusText.style.color = "#38ef7d";
+            document.querySelector('.status-dot').style.backgroundColor = "#38ef7d";
           } else {
             alert("Error: " + data.message);
+            statusText.textContent = "SYSTEM READY";
           }
         })
-        .catch((error) => {
-          alert("An error occurred: " + error.message);
-        });
+        .catch(e => alert("Connection Error: " + e.message));
     });
 
     document.getElementById("stop-guard-ai").addEventListener("click", () => {
-      fetch("/stop-guard-ai", {
-        method: "POST",
-      })
-        .then((response) => response.json())
-        .then((data) => {
+      statusText.textContent = "TERMINATING...";
+      fetch("/stop-guard-ai", { method: "POST" })
+        .then(r => r.json())
+        .then(data => {
           if (data.status === "success") {
-            alert("Guard AI stopped successfully!");
-            downloadButton.disabled = false; 
+            statusText.textContent = "SESSION ENDED";
+            statusText.style.color = "#ef473a";
+            document.querySelector('.status-dot').style.backgroundColor = "#ef473a";
+            downloadButton.disabled = false;
           } else {
             alert("Error: " + data.message);
           }
         })
-        .catch((error) => {
-          alert("An error occurred: " + error.message);
-        });
+        .catch(e => alert("Connection Error: " + e.message));
     });
 
     document.getElementById("download-report").addEventListener("click", () => {
@@ -125,4 +123,5 @@
     });
   </script>
 </body>
+
 </html>
