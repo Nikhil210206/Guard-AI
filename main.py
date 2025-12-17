@@ -372,7 +372,10 @@ def run_combined_detection():
     previous_distance = 0
     look_away_start = None
     look_away_start_time = None  # Track time.time() for duration calculation
+    look_away_start_timestamp = None  # Track actual start time for logging
     speaking_start = None
+    speaking_start_time = None  # Track time.time() for duration calculation
+    speaking_start_timestamp = None  # Track actual start time for logging
     multiple_person_start = None
 
     while cap.isOpened():
@@ -417,10 +420,18 @@ def run_combined_detection():
                     status = "Speaking"
                     if speaking_start is None:
                         speaking_start = current_time
+                        speaking_start_time = time.time()
+                        speaking_start_timestamp = current_time
                 else:
                     if speaking_start is not None:
-                        log_session_event("Speaking", speaking_start, current_time)
+                        # Only log if speaking duration >= MINIMUM_SPEAKING_DURATION
+                        duration = time.time() - speaking_start_time
+                        if duration >= MINIMUM_SPEAKING_DURATION:
+                            log_session_event("Speaking", speaking_start_timestamp, current_time)
+                            logging.info(f"Speaking event logged: {duration:.1f}s")
                         speaking_start = None
+                        speaking_start_time = None
+                        speaking_start_timestamp = None
 
                 left_eye_direction = get_iris_position(landmarks.landmark, LEFT_EYE, LEFT_IRIS, frame)
                 right_eye_direction = get_iris_position(landmarks.landmark, RIGHT_EYE, RIGHT_IRIS, frame)
@@ -430,14 +441,20 @@ def run_combined_detection():
             if look_away_start is None:
                 look_away_start = datetime.now().strftime("%H:%M:%S")
                 look_away_start_time = time.time()  # Record start time for duration
+                look_away_start_timestamp = look_away_start
             elif (time.time() - look_away_start_time) > LOOK_AWAY_DURATION:
                 warning = "⚠ Please focus on screen!"
         else:
             if look_away_start is not None:
-                end_time_away = datetime.now().strftime("%H:%M:%S")
-                log_session_event("Looking Away", look_away_start, end_time_away)
+                # Only log if looking away duration >= MINIMUM_LOOK_AWAY_DURATION
+                duration = time.time() - look_away_start_time
+                if duration >= MINIMUM_LOOK_AWAY_DURATION:
+                    end_time_away = datetime.now().strftime("%H:%M:%S")
+                    log_session_event("Looking Away", look_away_start_timestamp, end_time_away)
+                    logging.info(f"Looking away event logged: {duration:.1f}s")
             look_away_start = None
             look_away_start_time = None
+            look_away_start_timestamp = None
 
         # Display warnings
         cv2.putText(frame, f"Lip Status: {status}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
