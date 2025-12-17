@@ -206,6 +206,7 @@ def run_combined_detection():
     cap = cv2.VideoCapture(0)
     previous_distance = 0
     look_away_start = None
+    look_away_start_time = None  # Track time.time() for duration calculation
     speaking_start = None
 
     while cap.isOpened():
@@ -244,14 +245,15 @@ def run_combined_detection():
         if direction != "Looking Center":
             if look_away_start is None:
                 look_away_start = datetime.now().strftime("%H:%M:%S")
-                start_time_away = look_away_start
-            elif (datetime.now() - datetime.strptime(start_time_away, "%H:%M:%S")).seconds > LOOK_AWAY_DURATION:
+                look_away_start_time = time.time()  # Record start time for duration
+            elif (time.time() - look_away_start_time) > LOOK_AWAY_DURATION:
                 warning = "⚠ Please focus on screen!"
         else:
             if look_away_start is not None:
                 end_time_away = datetime.now().strftime("%H:%M:%S")
-                log_session_event("Looking Away", start_time_away, end_time_away)
+                log_session_event("Looking Away", look_away_start, end_time_away)
             look_away_start = None
+            look_away_start_time = None
 
         cv2.putText(frame, f"Lip Status: {status}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         cv2.putText(frame, f"Gaze Direction: {direction}", (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
@@ -300,9 +302,8 @@ if __name__ == "__main__":
         print("\nExiting Guard-AI...")
     finally:
         print("\nSaving Final Report...")
-        # Generate a unique filename with a timestamp
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        session_pdf_path = f"logs/final_report_{timestamp}.pdf"
+        # Generate report with fixed filename for Flask download endpoint
+        session_pdf_path = "logs/final_report.pdf"
         create_pdf_report(session_report_path, session_pdf_path)
         print(f"Report saved as: {session_pdf_path}")
         cv2.destroyAllWindows()
