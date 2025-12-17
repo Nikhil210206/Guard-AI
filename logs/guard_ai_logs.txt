@@ -426,3 +426,8 @@
 2025-04-22 05:48:28,214 - User started looking away.
 2025-04-22 05:48:28,278 - User started looking away.
 2025-04-22 05:48:28,551 - User started looking away.
+[8af3aac6] 2025-12-18 00:44:32,418 - Starting Guard AI monitoring session
+[8af3aac6] 2025-12-18 00:44:32,418 - Face detection initialization failed: module 'mediapipe' has no attribute 'solutions'
+[8af3aac6] 2025-12-18 00:44:32,418 - 🚨 Guard AI Monitoring Started!
+[8af3aac6] 2025-12-18 00:44:32,422 - Safari is open.
+[8af3aac6] 2025-12-18 00:44:34,914 - Open tabs in Safari: ['Validate Binary Search Tree | DSA Series : L.98 - YouTube', 'Problems - LeetCode', 'Day - 4 Leetcode Challenge - Queue - nb6938@srmist.edu.in - SRM Institute of Science and Technology Mail', 'Nikhil210206/Guard-AI: Guard AI is a real-time AI-based remote proctoring system that ensures secure', 'fair online assessments. It tracks website activity', 'detects speaking', 'and monitors user focus during exams', 'generating detailed session reports. Built with a modern frontend and a Node.js backend', 'Guard AI aims to redefine trust in online evaluations.', 'Figma prompt for Guard AI', 'Stitch - Projects', 'Guard AI | Remote Proctoring System', 'Start Page']
