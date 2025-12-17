@@ -12,10 +12,18 @@ from datetime import datetime
 import logging
 from fpdf import FPDF
 import textwrap
+import uuid
+
+# Generate unique session ID
+SESSION_ID = str(uuid.uuid4())[:8]
 
 # Logging setup
 os.makedirs("logs", exist_ok=True)
-logging.basicConfig(filename="logs/guard_ai_logs.txt", level=logging.INFO, format="%(asctime)s - %(message)s")
+logging.basicConfig(
+    filename="logs/guard_ai_logs.txt", 
+    level=logging.INFO, 
+    format=f"[{SESSION_ID}] %(asctime)s - %(message)s"
+)
 
 # Paths
 log_file_path = "website_usage_logs.txt"
@@ -41,12 +49,15 @@ LOOK_AWAY_DURATION = 5
 audio_detected = False
 background_noise_detected = False
 frame_queue = queue.Queue()
+multiple_persons_detected = False
+session_start_time = datetime.now()
 
 # Helper Functions
 def log_event(message):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(log_file_path, "a") as f:
-        f.write(f"[{timestamp}] {message}\n")
+        f.write(f"[{SESSION_ID}] [{timestamp}] {message}\n")
+    logging.info(message)
 
 def log_session_event(event_type, start_time, details):
     with open(session_report_path, "a") as f:
@@ -86,7 +97,14 @@ def create_pdf_report(txt_path, pdf_path):
     
     # Title
     pdf.set_font("Arial", 'B', size=16)
-    pdf.cell(0, 10, "Guard - AI Report", ln=True, align='C')
+    pdf.cell(0, 10, "Guard AI - Proctoring Report", ln=True, align='C')
+    pdf.ln(5)
+    
+    # Session Info
+    pdf.set_font("Arial", size=10)
+    pdf.cell(0, 10, f"Session ID: {SESSION_ID}", ln=True)
+    pdf.cell(0, 10, f"Session Start: {session_start_time.strftime('%Y-%m-%d %H:%M:%S')}", ln=True)
+    pdf.cell(0, 10, f"Report Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", ln=True)
     pdf.ln(10)
 
     pdf.set_font("Arial", size=12)
@@ -94,6 +112,7 @@ def create_pdf_report(txt_path, pdf_path):
     website_events = []
     speaking_events = []
     looking_events = []
+    multiple_person_events = []
 
     try:
         with open(txt_path, "r", encoding="utf-8") as file:
@@ -108,6 +127,8 @@ def create_pdf_report(txt_path, pdf_path):
                     speaking_events.append(line.replace("|", "-"))
                 elif line.startswith("Looking Away"):
                     looking_events.append(line.replace("|", "-"))
+                elif line.startswith("Multiple Persons"):
+                    multiple_person_events.append(line.replace("|", "-"))
 
         # Section: Website Tracking
         pdf.set_font("Arial", 'B', 14)
@@ -142,6 +163,17 @@ def create_pdf_report(txt_path, pdf_path):
                 pdf.cell(0, 10, txt=event, ln=True)
         else:
             pdf.cell(0, 10, "No distractions recorded.", ln=True)
+        
+        # Section: Multiple Persons
+        pdf.ln(5)
+        pdf.set_font("Arial", 'B', 14)
+        pdf.cell(0, 10, "Multiple Person Detection", ln=True)
+        pdf.set_font("Arial", size=12)
+        if multiple_person_events:
+            for event in multiple_person_events:
+                pdf.cell(0, 10, txt=event, ln=True)
+        else:
+            pdf.cell(0, 10, "No multiple person incidents detected.", ln=True)
 
         pdf.output(pdf_path)
         print(f"✅ Final report saved to {pdf_path}")
@@ -200,14 +232,35 @@ def get_iris_position(landmarks, eye_landmarks, iris_landmarks, frame):
 
 # Combined Detection
 def run_combined_detection():
-    print("[Combined Detection] Started")
-    face_mesh = mp.solutions.face_mesh.FaceMesh(refine_landmarks=True, max_num_faces=1)
+    global multiple_persons_detected
+    print(f"[Combined Detection] Started - Session ID: {SESSION_ID}")
+    logging.info(f"Starting Guard AI monitoring session")
+    
+    try:
+        face_mesh = mp.solutions.face_mesh.FaceMesh(refine_landmarks=True, max_num_faces=2)
+    except Exception as e:
+        print(f"❌ Error initializing face detection: {e}")
+        logging.error(f"Face detection initialization failed: {e}")
+        return
+    
     threading.Thread(target=audio_listener, daemon=True).start()
-    cap = cv2.VideoCapture(0)
+    
+    try:
+        cap = cv2.VideoCapture(0)
+        if not cap.isOpened():
+            print("❌ Error: Cannot access camera. Please check permissions.")
+            logging.error("Camera access denied or unavailable")
+            return
+    except Exception as e:
+        print(f"❌ Error opening camera: {e}")
+        logging.error(f"Camera error: {e}")
+        return
+    
     previous_distance = 0
     look_away_start = None
     look_away_start_time = None  # Track time.time() for duration calculation
     speaking_start = None
+    multiple_person_start = None
 
     while cap.isOpened():
         ret, frame = cap.read()
@@ -221,6 +274,24 @@ def run_combined_detection():
         status = "Not Speaking"
         direction = "No face detected"
         warning = ""
+        num_faces = 0
+
+        if result.multi_face_landmarks:
+            num_faces = len(result.multi_face_landmarks)
+            
+            # Check for multiple persons
+            if num_faces > 1:
+                multiple_persons_detected = True
+                current_time = datetime.now().strftime("%H:%M:%S")
+                if multiple_person_start is None:
+                    multiple_person_start = current_time
+                    log_session_event("Multiple Persons", current_time, f"{num_faces} faces detected")
+                    logging.warning(f"Multiple persons detected: {num_faces} faces")
+                warning = f"⚠️ WARNING: {num_faces} persons detected!"
+            else:
+                if multiple_person_start is not None:
+                    multiple_person_start = None
+                multiple_persons_detected = False
 
         if result.multi_face_landmarks:
             for landmarks in result.multi_face_landmarks:
@@ -255,10 +326,12 @@ def run_combined_detection():
             look_away_start = None
             look_away_start_time = None
 
-        cv2.putText(frame, f"Lip Status: {status}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        cv2.putText(frame, f"Gaze Direction: {direction}", (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+        # Display warnings
+        cv2.putText(frame, f"Lip Status: {status}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        cv2.putText(frame, f"Gaze Direction: {direction}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+        cv2.putText(frame, f"Faces Detected: {num_faces}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2)
         if warning:
-            cv2.putText(frame, warning, (10, 110), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            cv2.putText(frame, warning, (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
 
         if not frame_queue.full():
             frame_queue.put(frame)
